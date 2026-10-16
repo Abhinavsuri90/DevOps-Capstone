@@ -2,7 +2,7 @@
 
 **Course:** SST DevOps & Cloud · **Session 21** · **Author:** Abhinav (24BCS10282)
 
-[![Final project CI/CD](https://github.com/Abhinavsuri90/DevOps-Coursework-final/actions/workflows/final-devops-project.yml/badge.svg)](https://github.com/Abhinavsuri90/DevOps-Coursework-final/actions/workflows/final-devops-project.yml)
+[![SpendWise CI/CD](https://github.com/Abhinavsuri90/DevOps-Capstone/actions/workflows/ci-cd.yml/badge.svg)](https://github.com/Abhinavsuri90/DevOps-Capstone/actions/workflows/ci-cd.yml)
 
 SpendWise is a small expense tracker for students. You add what you spend (mess fees, books, travel…) and see totals by category. It is my own application, written for this project:
 
@@ -11,16 +11,18 @@ SpendWise is a small expense tracker for students. You add what you spend (mess 
 
 The project takes it through the whole DevOps life cycle: tests, Docker images, a CI/CD pipeline with DevSecOps gates, Kubernetes via a Helm chart, Prometheus/Grafana monitoring, GitOps with Argo CD, and Terraform for the AWS infrastructure (VPC + EKS).
 
+This repository holds only the capstone. I built it inside my coursework repository ([DevOps-Coursework-final, folder `final-devops-project/`](https://github.com/Abhinavsuri90/DevOps-Coursework-final/tree/main/final-devops-project)) and moved it here with its full Git history. Pipeline runs and commits from before the move link to that repository, and transcripts recorded there show the path `final-devops-project/`.
+
 Everything below was actually run:
 
 - Command transcripts are saved in [evidence/](evidence/).
-- Terminal screenshots are renders of those transcripts made with [scripts/render-evidence-png.py](../scripts/render-evidence-png.py). Each image names its source file and lines.
+- Terminal screenshots are renders of those transcripts made with [scripts/render-evidence-png.py](scripts/render-evidence-png.py). Each image names its source file and lines.
 - The `browser-*` screenshots are real headless-Chrome captures of the running UIs.
 
 ## Quick start
 
 ```bash
-cd final-devops-project
+git clone https://github.com/Abhinavsuri90/DevOps-Capstone.git && cd DevOps-Capstone
 make help          # every shortcut, one line each
 make test          # ruff + 9 pytest tests (SQLite test database)
 make compose-up    # the whole stack on http://localhost:3000
@@ -57,9 +59,9 @@ The [Makefile](Makefile) wraps every command used below. [DEMO.md](DEMO.md) is t
 | --- | --- | --- |
 | M1 Application | FastAPI `/health`, ≥ 4 REST endpoints (GET/POST/PUT/DELETE), PostgreSQL table managed by Alembic, React UI | [backend/app/main.py](backend/app/main.py), [alembic/versions/0001_create_expenses.py](backend/alembic/versions/0001_create_expenses.py), [frontend/src/App.jsx](frontend/src/App.jsx) · [screenshot](screenshots/browser-01-compose-app.png) |
 | M2 Testing | pytest passes, ≥ 5 tests over ≥ 3 endpoints, test DB, `pytest.ini` / `conftest.py` | [tests/test_expenses.py](backend/tests/test_expenses.py) (9 tests, 97% coverage), [tests/conftest.py](backend/tests/conftest.py) (SQLite test DB), [pytest.ini](backend/pytest.ini) · [screenshot](screenshots/02-tests.png) |
-| M3 Git & GitHub | Public repo, meaningful commits, `.gitignore` | [github.com/Abhinavsuri90/DevOps-Coursework-final](https://github.com/Abhinavsuri90/DevOps-Coursework-final), [.gitignore](.gitignore) (`.env`, `__pycache__/`, `node_modules/`, `.venv/`, state files) · [commit history](screenshots/browser-13-github-commits.png) |
+| M3 Git & GitHub | Public repo, meaningful commits, `.gitignore` | [github.com/Abhinavsuri90/DevOps-Capstone](https://github.com/Abhinavsuri90/DevOps-Capstone), [.gitignore](.gitignore) (`.env`, `__pycache__/`, `node_modules/`, `.venv/`, state files) · [commit history](screenshots/browser-13-github-commits.png) |
 | M4 Docker | Backend Dockerfile, multi-stage frontend Dockerfile, non-root, `docker compose up --build` | [backend/Dockerfile](backend/Dockerfile), [frontend/Dockerfile](frontend/Dockerfile) (multi-stage), [docker-compose.yml](docker-compose.yml) · [screenshot](screenshots/01-docker-compose.png) |
-| M5 CI/CD | Workflow on push to `main`, pytest gate, frontend build, both images built, pushed to GHCR with SHA tags | [.github/workflows/final-devops-project.yml](../.github/workflows/final-devops-project.yml) (copy in [.github/workflows/](.github/workflows/)) · [green run](screenshots/browser-11-github-actions-run.png) · [GHCR SHA tags](screenshots/browser-12-ghcr-tags.png) |
+| M5 CI/CD | Workflow on push to `main`, pytest gate, frontend build, both images built, pushed to GHCR with SHA tags | [.github/workflows/ci-cd.yml](.github/workflows/ci-cd.yml) · [green run](screenshots/browser-11-github-actions-run.png) · [GHCR SHA tags](screenshots/browser-12-ghcr-tags.png) |
 | M6 DevSecOps | Trivy on both images, fails on HIGH/CRITICAL, explanation | `build-images` job + [security/trivy.yaml](security/trivy.yaml) · [Trivy results from CI](screenshots/browser-15-github-trivy-annotations.png) · [explanation](#devsecops-implementation) |
 | M7 Terraform | VPC with 2 public subnets, EKS with a node group, plan/apply/destroy, `tfvars.example` | [terraform/](terraform/), [terraform.tfvars.example](terraform/terraform.tfvars.example) · [Terraform infrastructure](#terraform-infrastructure) · applied, verified with `kubectl` and destroyed on AWS: [recorded run](#recorded-run-on-aws), [evidence](evidence/14-terraform-aws-eks.txt) · [plan + apply](screenshots/27-eks-plan-apply.png) · Console: [EKS cluster](screenshots/31-aws-console-eks-cluster.png), [node group](screenshots/32-aws-console-eks-node-group.png), [VPC](screenshots/33-aws-console-vpc.png) · [destroy](screenshots/30-eks-destroy.png) |
 | M8 Kubernetes + Helm | Namespace, chart, 2+ replicas each, ClusterIP Services, Ingress `/` → frontend and `/api` → backend | [k8s/namespace.yaml](k8s/namespace.yaml), [helm/spendwise/](helm/spendwise/) · [screenshots](#kubernetes-deployment) |
@@ -94,10 +96,10 @@ Infrastructure: Terraform → AWS VPC + EKS
 
 ```mermaid
 flowchart LR
-    Dev([Developer]) -->|git push| Repo[(GitHub repo<br/>DevOps-Coursework-final)]
+    Dev([Developer]) -->|git push| Repo[(GitHub repo<br/>DevOps-Capstone)]
     Repo -->|push to main| CI
 
-    subgraph CI["GitHub Actions: final-devops-project.yml"]
+    subgraph CI["GitHub Actions: ci-cd.yml"]
       direction TB
       T[backend-test + frontend-build] --> SEC[SAST · SCA · secret scan]
       SEC --> IMG[build images + Trivy]
@@ -107,7 +109,7 @@ flowchart LR
       KIND --> BUMP[commit new tag to<br/>values-gitops.yaml]
     end
 
-    PUSH --> GHCR[(ghcr.io/abhinavsuri90/<br/>devops-coursework-final/<br/>spendwise-backend / -frontend)]
+    PUSH --> GHCR[(ghcr.io/abhinavsuri90/<br/>devops-capstone/<br/>spendwise-backend / -frontend)]
     BUMP --> Repo
 
     subgraph K8s["Kubernetes cluster (Minikube locally; EKS on AWS)"]
@@ -156,7 +158,7 @@ flowchart LR
 ## Repository layout
 
 ```text
-final-devops-project/
+DevOps-Capstone/
 ├── backend/                # FastAPI app (app/), Alembic migrations (alembic/versions/), tests/, pytest.ini,
 │                           # requirements.txt, Dockerfile
 ├── frontend/               # React + Vite UI (src/), Dockerfile (multi-stage: Node build + nginx), nginx.conf.template
@@ -164,23 +166,24 @@ final-devops-project/
 ├── k8s/                    # namespace.yaml, create-db-secret.sh, render.sh, spendwise-rendered.yaml
 ├── helm/spendwise/         # the Helm chart (values.yaml, values-local.yaml, values-gitops.yaml, templates/)
 ├── terraform/              # VPC + 2 public subnets + EKS cluster + managed node group
-├── .github/workflows/      # copy of the pipeline (the active file is in the repo root .github/workflows/)
+├── .github/workflows/      # ci-cd.yml: tests, DevSecOps gates, images, GHCR, kind deploy, GitOps update
 ├── security/               # trivy.yaml, gitleaks.toml, SECURITY.md
 ├── monitoring/             # kube-prometheus-stack values, traffic generator, prom.sh helper
 ├── gitops/                 # Argo CD Application + Argo CD install values
 ├── troubleshooting/        # Helm values overlays that inject the five challenge faults
+├── scripts/                # evidence.sh (transcript recorder), render-evidence-png.py (transcript → PNG)
 ├── evidence/               # recorded command transcripts
 └── screenshots/            # rendered transcripts + browser captures
 ```
 
-The layout follows the course brief (`backend/`, `frontend/`, `docker-compose.yml`, `k8s/`, `helm/`, `terraform/`, `monitoring/`). Until 16 October the same files lived in `application/backend`, `application/frontend`, `docker/` and `kubernetes/`, so transcripts recorded before then show those paths.
+The layout follows the course brief (`backend/`, `frontend/`, `docker-compose.yml`, `k8s/`, `helm/`, `terraform/`, `monitoring/`). Until 16 October the same files lived in `application/backend`, `application/frontend`, `docker/` and `kubernetes/`, so transcripts recorded before then show those paths (inside `final-devops-project/` of the coursework repository).
 
 ## Application setup
 
 **Backend (no Docker needed).** Without `DATABASE_URL` the app uses a local SQLite file. With Docker or Kubernetes it gets a PostgreSQL URL.
 
 ```bash
-cd final-devops-project/backend
+cd DevOps-Capstone/backend
 python3 -m venv .venv && source .venv/bin/activate
 pip install -r requirements-dev.txt
 alembic upgrade head                      # creates the expenses table (migration 0001)
@@ -190,7 +193,7 @@ uvicorn app.main:app --reload --port 8000 # http://localhost:8000/docs for the O
 **Frontend.** In dev mode Vite proxies `/api` to the backend on port 8000:
 
 ```bash
-cd final-devops-project/frontend
+cd DevOps-Capstone/frontend
 npm ci && npm run dev                     # http://localhost:5173
 ```
 
@@ -222,7 +225,7 @@ The 9 tests cover:
 Each image uses its own folder as build context (`backend/`, `frontend/`). The [backend](backend/.dockerignore) and [frontend](frontend/.dockerignore) `.dockerignore` files keep tests, caches, `node_modules/` and `dist/` out of it.
 
 ```bash
-cd final-devops-project
+cd DevOps-Capstone
 cp .env.example .env && sed -i '' "s/change-me/$(openssl rand -hex 16)/" .env   # macOS sed; use sed -i on Linux
 docker compose up --build --detach
 docker compose ps
@@ -325,7 +328,7 @@ The image helper in [_helpers.tpl](helm/spendwise/templates/_helpers.tpl) uses `
 Public subnets keep this lab cheap: there is no NAT gateway, which would cost money every hour even when idle. The EKS cluster security group only accepts traffic from the cluster itself, so the nodes get no inbound traffic except through Kubernetes Services. In production the nodes would go in private subnets behind a NAT gateway. This and the public API endpoint are the only two exceptions the [IaC scan](#infrastructure-as-code-scan) allows. Each is written down with its reason in [security/trivyignore-iac](security/trivyignore-iac).
 
 ```bash
-cd final-devops-project/terraform
+cd DevOps-Capstone/terraform
 cp terraform.tfvars.example terraform.tfvars   # set api_allowed_cidrs to your own IP: curl -s https://checkip.amazonaws.com
 terraform init
 terraform fmt -check && terraform validate
@@ -355,7 +358,7 @@ terraform destroy                     # always, straight after the demo
 
 ### Recorded run on AWS
 
-The whole life cycle ran against a real AWS account ([evidence/14-terraform-aws-eks.txt](evidence/14-terraform-aws-eks.txt)), with credentials from `aws configure` (an IAM user's access key, never written into any file in this repository). The account is on the AWS **Free plan**, whose organization policy allows only one region, Sydney (`ap-southeast-2`). An apply in Mumbai was refused with *explicit deny in a service control policy*, as recorded in [Session 18](../session18-terraform-iac/terraform-s3-demo/README.md#run-it-on-aws-recorded). The transcript replaces the 12-digit account ID with `<account-id>` and my IP with `<my-ip>`.
+The whole life cycle ran against a real AWS account ([evidence/14-terraform-aws-eks.txt](evidence/14-terraform-aws-eks.txt)), with credentials from `aws configure` (an IAM user's access key, never written into any file in this repository). The account is on the AWS **Free plan**, whose organization policy allows only one region, Sydney (`ap-southeast-2`). An apply in Mumbai was refused with *explicit deny in a service control policy*, as recorded in [Session 18](https://github.com/Abhinavsuri90/DevOps-Coursework-final/blob/main/session18-terraform-iac/terraform-s3-demo/README.md#run-it-on-aws-recorded). The transcript replaces the 12-digit account ID with `<account-id>` and my IP with `<my-ip>`.
 
 | Step | Result |
 | --- | --- |
@@ -401,11 +404,11 @@ The second run in the terminal: plan, apply, the same facts from the AWS CLI, an
 
 ## CI/CD pipeline
 
-The active workflow is [.github/workflows/final-devops-project.yml](../.github/workflows/final-devops-project.yml) in the repository root, because GitHub only runs workflows from there. An identical copy is kept in [.github/workflows/](.github/workflows/) inside this folder, and the first job `diff`s the two.
+The workflow is [.github/workflows/ci-cd.yml](.github/workflows/ci-cd.yml).
 
 **Triggers:**
 
-- push to `main` (paths: this folder and the workflow file). Documentation, evidence, screenshots and `values-gitops.yaml` are excluded, so the GitOps commit does not start a new run
+- push to `main`. Changes that only touch documentation, evidence, screenshots or `values-gitops.yaml` are ignored, so the GitOps commit does not start a new run
 - pull requests
 - manual `workflow_dispatch`
 
@@ -432,7 +435,7 @@ flowchart LR
 | `sast` / `sca` / `secret-scan` | Security stages, see [DevSecOps](#devsecops-implementation) | A finding above the threshold |
 | `build-images` (matrix: backend, frontend) | `docker build` with `APP_VERSION=<sha>`, **Trivy image scan**, the Trivy result published as a run annotation, image saved as an artifact | The build fails or there is a fixable HIGH/CRITICAL CVE |
 | `security-gate` | Runs with `if: always()`, writes a summary table, and requires every security job to be `success` | Any security job failed, was skipped or was cancelled |
-| `push-images` (matrix) | `main` only. Loads the scanned image, tags it `ghcr.io/abhinavsuri90/devops-coursework-final/spendwise-<component>:<12-char sha>`, pushes with `GITHUB_TOKEN` (`packages: write`) | The push fails |
+| `push-images` (matrix) | `main` only. Loads the scanned image, tags it `ghcr.io/abhinavsuri90/devops-capstone/spendwise-<component>:<12-char sha>`, pushes with `GITHUB_TOKEN` (`packages: write`) | The push fails |
 | `deploy` | Creates a **kind** cluster, installs ingress-nginx, creates the DB Secret and a GHCR pull Secret, then runs `helm upgrade --install` with the SHA tags, `helm test`, and a smoke test **through the Ingress** (`/`, a POST to `/api/expenses`, `/api/summary`). If anything fails, a diagnostics step publishes Pod states and warning events | The rollout, `helm test`, or the smoke test fails |
 | `gitops-update` | `main` only. `yq` writes the new tag into `values-gitops.yaml`, then commits `gitops: deploy spendwise <sha>` and pushes (with retry and rebase) | The push fails |
 
@@ -440,13 +443,13 @@ Images are tagged only with the **commit SHA**, never `latest`, so every running
 
 ### Pipeline runs on GitHub
 
-Every run is listed under [Actions → "Final project · SpendWise CI/CD"](https://github.com/Abhinavsuri90/DevOps-Coursework-final/actions/workflows/final-devops-project.yml).
+Every run is listed under [Actions → "SpendWise CI/CD"](https://github.com/Abhinavsuri90/DevOps-Capstone/actions/workflows/ci-cd.yml).
 
 **A green run.** [Run 38858988420](https://github.com/Abhinavsuri90/DevOps-Coursework-final/actions/runs/38858988420), on commit `a6bca01` (the first run after the move to the brief's folder layout), passed all 12 jobs in 6 min 19 s. Both image scans report 0 CRITICAL and 0 HIGH, and the GitOps job committed `gitops: deploy spendwise a6bca01bb2ce`, which Argo CD rolled out:
 
 ![Green pipeline run on GitHub Actions](screenshots/browser-11-github-actions-run.png)
 
-**Images in GHCR.** They are tagged with the 12-character commit SHA, never `latest` (`ghcr.io/abhinavsuri90/devops-coursework-final/spendwise-backend` and `-frontend`):
+**Images in GHCR.** They are tagged with the 12-character commit SHA, never `latest` (`ghcr.io/abhinavsuri90/devops-capstone/spendwise-backend` and `-frontend`):
 
 ![GHCR spendwise-backend versions tagged with commit SHAs](screenshots/browser-12-ghcr-tags.png)
 
@@ -466,7 +469,7 @@ Every run is listed under [Actions → "Final project · SpendWise CI/CD"](https
 | Practice | Tool | Job | Gate | Configuration |
 | --- | --- | --- | --- | --- |
 | SAST (Python) | Bandit 1.9.4 | `sast` | Fails on medium or high severity | `[tool.bandit]` in [pyproject.toml](backend/pyproject.toml) |
-| SAST (Python + JavaScript) | GitHub CodeQL | `sast` | Results in the repo's Security → Code scanning tab | `build-mode: none`, source root `final-devops-project/` |
+| SAST (Python + JavaScript) | GitHub CodeQL | `sast` | Results in the repo's Security → Code scanning tab | `build-mode: none`, the whole repository |
 | SCA (Python) | pip-audit 2.10.1 | `sca` | Any known vulnerability (`--strict`) | [requirements.txt](backend/requirements.txt) (all pinned) |
 | SCA (npm) | npm audit | `sca` | High or critical | [package-lock.json](frontend/package-lock.json) |
 | SCA (lock files) | Trivy 0.74 `fs` | `sca` | Fixable HIGH/CRITICAL | [security/trivy.yaml](security/trivy.yaml) |
@@ -521,7 +524,7 @@ Gitleaks found one real secret on disk: the Compose `.env` file (the random DB p
 
 - **What it scanned:** Trivy unpacked each built image and checked two things against its vulnerability database: the operating-system packages (Alpine 3.24: 29 packages in the backend image, 70 in the frontend), and every language package it found (the Python `site-packages` of the backend, with each package's `METADATA`).
 - **Result:** 0 HIGH or CRITICAL vulnerabilities with an available fix in both images, so the gate passes. This does not mean "no vulnerabilities exist": it means nothing at the severity we block on has a released fix we could upgrade to.
-- **What failing looks like:** Session 17's first image scan failed on CVEs in libraries vendored inside `pip` (e.g. CVE-2025-47273 in setuptools, a path traversal). Removing pip from the runtime image is why both images here scan clean. See [Session 17](../session-17-devsecops/README.md#the-image-scan-caught-a-real-problem-and-the-gate-failed).
+- **What failing looks like:** Session 17's first image scan failed on CVEs in libraries vendored inside `pip` (e.g. CVE-2025-47273 in setuptools, a path traversal). Removing pip from the runtime image is why both images here scan clean. See [Session 17](https://github.com/Abhinavsuri90/DevOps-Coursework-final/blob/main/session-17-devsecops/README.md#the-image-scan-caught-a-real-problem-and-the-gate-failed).
 
 ## Monitoring
 
@@ -591,7 +594,7 @@ sequenceDiagram
     participant Argo as Argo CD (in cluster)
     participant K8s as Kubernetes
     Dev->>GH: git push (code change)
-    GH->>CI: run final-devops-project.yml
+    GH->>CI: run ci-cd.yml
     CI->>CI: test, scan, build, gate
     CI->>REG: push spendwise-*:<sha>
     CI->>GH: commit values-gitops.yaml (tag = <sha>)
@@ -607,7 +610,7 @@ sequenceDiagram
 | File | Purpose |
 | --- | --- |
 | [gitops/argocd-values.yaml](gitops/argocd-values.yaml) | Small Argo CD install for Minikube: no Dex, notifications or ApplicationSet controller, Git polled every 60 s, read-only anonymous UI for screenshots |
-| [gitops/argocd-application.yaml](gitops/argocd-application.yaml) | `Application` **spendwise**: repo `Abhinavsuri90/DevOps-Coursework-final`, branch `main`, path `final-devops-project/helm/spendwise`, value file `values-gitops.yaml`, destination namespace `spendwise`. `automated` sync with **prune** and **selfHeal**, plus a retry back-off |
+| [gitops/argocd-application.yaml](gitops/argocd-application.yaml) | `Application` **spendwise**: repo `Abhinavsuri90/DevOps-Capstone`, branch `main`, path `helm/spendwise`, value file `values-gitops.yaml`, destination namespace `spendwise`. `automated` sync with **prune** and **selfHeal**, plus a retry back-off |
 | [helm/spendwise/values-gitops.yaml](helm/spendwise/values-gitops.yaml) | The only file CI changes: `backend.image.tag` and `frontend.image.tag` |
 
 ```bash
@@ -634,13 +637,13 @@ Until now the namespace had been deployed by hand with Helm. For GitOps I handed
 
 ![Argo CD application tree for spendwise](screenshots/browser-10-argocd-spendwise.png)
 
-**Repository move.** The project now lives in `github.com/Abhinavsuri90/DevOps-Coursework-final`, and the images are repository-scoped (`ghcr.io/abhinavsuri90/devops-coursework-final/spendwise-*`). Changing `repoURL` in [gitops/argocd-application.yaml](gitops/argocd-application.yaml) was the whole migration. Argo CD synced from the new repository in 110 s, with the new images, every Pod Ready with 0 restarts, and the data intact ([evidence/13-argocd-new-repo.txt](evidence/13-argocd-new-repo.txt)):
+**Repository moves.** The project moved twice: from `DevOps-Coursework` to `DevOps-Coursework-final` (folder `final-devops-project/`), and then to this repository. Each move changed only `repoURL` and `path` in [gitops/argocd-application.yaml](gitops/argocd-application.yaml) and the image names; Argo CD synced from the new source and the PVC with the data stayed. The first move:
 
 ![Argo CD switched to the new repository](screenshots/26-argocd-new-repo.png)
 
 ### Live demo (M10): commit → pipeline → deployment update (recorded)
 
-One commit, and everything after it is automatic. This was recorded on the new repository ([evidence/11-m10-commit-to-deploy.txt](evidence/11-m10-commit-to-deploy.txt)):
+One commit, and everything after it is automatic. This was recorded in the coursework repository, before the move to this one, so the links go there ([evidence/11-m10-commit-to-deploy.txt](evidence/11-m10-commit-to-deploy.txt)):
 
 | Step | What happened | When (UTC) |
 | --- | --- | --- |
@@ -664,7 +667,7 @@ One commit, and everything after it is automatic. This was recorded on the new r
 4. Watch Argo CD's UI or `kubectl -n spendwise get pods -w`.
 5. Refresh the app: the footer shows the new commit SHA.
 
-To show self-heal as well, run `kubectl -n spendwise scale deploy/spendwise-frontend --replicas=1`; Argo CD sets it back to 2 within seconds, because Git says 2. Session 20's [GitOps task](../session20-monitoring-observability-gitops/03-gitops/README.md) records sync, self-heal and prune step by step.
+To show self-heal as well, run `kubectl -n spendwise scale deploy/spendwise-frontend --replicas=1`; Argo CD sets it back to 2 within seconds, because Git says 2. Session 20's [GitOps task](https://github.com/Abhinavsuri90/DevOps-Coursework-final/blob/main/session20-monitoring-observability-gitops/03-gitops/README.md) records sync, self-heal and prune step by step.
 
 ## Troubleshooting
 

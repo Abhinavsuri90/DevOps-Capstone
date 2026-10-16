@@ -5,7 +5,7 @@
 ## Before the session (5 minutes, laptop plugged in, lid open)
 
 ```bash
-cd final-devops-project
+cd DevOps-Capstone
 minikube start                     # the cluster keeps all state between restarts
 make mode-gitops                   # 8 GB laptop: Argo CD on, monitoring stack paused
 make status                        # Argo CD Synced/Healthy, Pods Running
@@ -17,8 +17,8 @@ Open these tabs:
 
 1. http://spendwise.local:18080 (needs `127.0.0.1 spendwise.local` in `/etc/hosts`)
 2. Argo CD: http://localhost:8081/applications/argocd/spendwise
-3. GitHub Actions: https://github.com/Abhinavsuri90/DevOps-Coursework-final/actions
-4. This repository's `final-devops-project/README.md`
+3. GitHub Actions: https://github.com/Abhinavsuri90/DevOps-Capstone/actions
+4. This repository's `README.md`
 
 ## The demo
 

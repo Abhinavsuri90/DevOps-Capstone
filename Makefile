@@ -1,6 +1,6 @@
-# SpendWise - one-command shortcuts for the whole project. Run from final-devops-project/.
+# SpendWise - one-command shortcuts for the whole project. Run from the repository root.
 #   make help
-# The CI pipeline runs the same tools with the same versions (.github/workflows/final-devops-project.yml).
+# The CI pipeline runs the same tools with the same versions (.github/workflows/ci-cd.yml).
 
 SHELL        := /bin/bash
 NAMESPACE    ?= spendwise
