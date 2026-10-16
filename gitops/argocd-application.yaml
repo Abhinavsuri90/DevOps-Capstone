@@ -10,9 +10,9 @@ metadata:
 spec:
   project: default
   source:
-    repoURL: https://github.com/Abhinavsuri90/DevOps-Coursework-final.git
+    repoURL: https://github.com/Abhinavsuri90/DevOps-Capstone.git
     targetRevision: main
-    path: final-devops-project/helm/spendwise
+    path: helm/spendwise
     helm:
       releaseName: spendwise
       valueFiles:

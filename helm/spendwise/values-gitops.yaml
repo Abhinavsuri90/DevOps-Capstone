@@ -2,14 +2,14 @@
 # after it has pushed new images to GHCR, then commits this file back to main.
 backend:
   image:
-    repository: ghcr.io/abhinavsuri90/devops-coursework-final/spendwise-backend
+    repository: ghcr.io/abhinavsuri90/devops-capstone/spendwise-backend
     tag: "a6bca01bb2ce"
   # Minikube runs the whole cluster in about 3.4 GB of memory, so cap autoscaling at 3 Pods.
   autoscaling:
     maxReplicas: 3
 frontend:
   image:
-    repository: ghcr.io/abhinavsuri90/devops-coursework-final/spendwise-frontend
+    repository: ghcr.io/abhinavsuri90/devops-capstone/spendwise-frontend
     tag: "a6bca01bb2ce"
 ingress:
   hosts:
