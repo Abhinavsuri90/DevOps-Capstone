@@ -1,0 +1,48 @@
+# Argo CD on Minikube moves to this repository (DevOps-Capstone). Only the Application's repoURL and path change; the images come from ghcr.io/abhinavsuri90/devops-capstone
+$ kubectl -n argocd get applications.argoproj.io spendwise -o custom-columns='REPO:.spec.source.repoURL,PATH:.spec.source.path,SYNC:.status.sync.status,HEALTH:.status.health.status'
+REPO                                                           PATH                                  SYNC     HEALTH
+https://github.com/Abhinavsuri90/DevOps-Coursework-final.git   final-devops-project/helm/spendwise   Synced   Healthy
+$ git log --oneline -1 -- helm/spendwise/values-gitops.yaml
+72a2d87 gitops: deploy spendwise 28ab4ffa0951
+$ grep -E 'repository|tag' helm/spendwise/values-gitops.yaml
+# Values used by Argo CD (GitOps). The CI pipeline rewrites the two image tags below
+    repository: ghcr.io/abhinavsuri90/devops-capstone/spendwise-backend
+    tag: "28ab4ffa0951"
+    repository: ghcr.io/abhinavsuri90/devops-capstone/spendwise-frontend
+    tag: "28ab4ffa0951"
+$ kubectl apply -f gitops/argocd-application.yaml
+application.argoproj.io/spendwise configured
+$ kubectl -n spendwise rollout status deploy/spendwise-backend --timeout=180s && kubectl -n spendwise rollout status deploy/spendwise-frontend --timeout=180s
+deployment "spendwise-backend" successfully rolled out
+deployment "spendwise-frontend" successfully rolled out
+$ kubectl -n argocd get applications.argoproj.io spendwise -o custom-columns='REPO:.spec.source.repoURL,PATH:.spec.source.path,SYNC:.status.sync.status,HEALTH:.status.health.status,REVISION:.status.sync.revision'
+REPO                                                   PATH             SYNC     HEALTH    REVISION
+https://github.com/Abhinavsuri90/DevOps-Capstone.git   helm/spendwise   Synced   Healthy   72a2d87754233c2f5f89ae800181b4a200838c63
+$ git rev-parse HEAD
+72a2d87754233c2f5f89ae800181b4a200838c63
+$ kubectl -n spendwise get deploy -o custom-columns='DEPLOYMENT:.metadata.name,IMAGE:.spec.template.spec.containers[0].image,READY:.status.readyReplicas'
+DEPLOYMENT           IMAGE                                                                   READY
+spendwise-backend    ghcr.io/abhinavsuri90/devops-capstone/spendwise-backend:28ab4ffa0951    2
+spendwise-frontend   ghcr.io/abhinavsuri90/devops-capstone/spendwise-frontend:28ab4ffa0951   2
+spendwise-traffic    busybox:1.36                                                            <none>
+$ kubectl -n spendwise get pods,pvc
+NAME                                      READY   STATUS    RESTARTS       AGE
+pod/spendwise-backend-844f78449f-jfmgd    1/1     Running   0              14s
+pod/spendwise-backend-844f78449f-rcrlq    1/1     Running   0              36s
+pod/spendwise-frontend-74c95497f5-qphpb   1/1     Running   0              25s
+pod/spendwise-frontend-74c95497f5-wxcsl   1/1     Running   0              36s
+pod/spendwise-postgres-0                  1/1     Running   1 (105m ago)   5h52m
+
+NAME                                              STATUS   VOLUME                                     CAPACITY   ACCESS MODES   STORAGECLASS   VOLUMEATTRIBUTESCLASS   AGE
+persistentvolumeclaim/data-spendwise-postgres-0   Bound    pvc-82e7404b-cc2f-4cb1-be20-0db1aa1e7f15   1Gi        RWO            standard       <unset>                 2d18h
+# The app answers with the new version, and the data in the PVC survived the move
+$ kubectl -n spendwise exec deploy/spendwise-frontend -- wget -qO- http://spendwise-backend:8000/health
+{"status":"ok","database":"ok","version":"28ab4ffa0951"}
+$ kubectl -n spendwise exec deploy/spendwise-frontend -- wget -qO- http://spendwise-backend:8000/api/summary
+{"total":"11284.00","count":5,"by_category":[{"category":"rent","total":"9000.00","count":1},{"category":"books","total":"1299.00","count":1},{"category":"travel","total":"650.00","count":1},{"category":"fun","total":"240.00","count":1},{"category":"food","total":"95.00","count":1}]}
+# Right after the rollout Argo CD showed the HPA as Degraded for about a minute: cpu <unknown> until metrics-server had scraped the new Pods. Then:
+$ kubectl -n spendwise get hpa spendwise-backend
+NAME                REFERENCE                      TARGETS        MINPODS   MAXPODS   REPLICAS   AGE
+spendwise-backend   Deployment/spendwise-backend   cpu: 35%/70%   2         3         2          25h
+$ kubectl -n argocd get applications.argoproj.io spendwise -o jsonpath='{.status.sync.status} {.status.health.status}{"\n"}'
+Synced Healthy

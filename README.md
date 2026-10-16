@@ -445,7 +445,7 @@ Images are tagged only with the **commit SHA**, never `latest`, so every running
 
 Every run is listed under [Actions → "SpendWise CI/CD"](https://github.com/Abhinavsuri90/DevOps-Capstone/actions/workflows/ci-cd.yml).
 
-**A green run.** [Run 38858988420](https://github.com/Abhinavsuri90/DevOps-Coursework-final/actions/runs/38858988420), on commit `a6bca01` (the first run after the move to the brief's folder layout), passed all 12 jobs in 6 min 19 s. Both image scans report 0 CRITICAL and 0 HIGH, and the GitOps job committed `gitops: deploy spendwise a6bca01bb2ce`, which Argo CD rolled out:
+**A green run.** [Run 38867628237](https://github.com/Abhinavsuri90/DevOps-Capstone/actions/runs/38867628237), the first run in this repository (commit `28ab4ff`), passed all 12 jobs in 5 min 59 s. Both image scans report 0 CRITICAL and 0 HIGH, and the GitOps job committed `gitops: deploy spendwise 28ab4ffa0951`, which Argo CD rolled out:
 
 ![Green pipeline run on GitHub Actions](screenshots/browser-11-github-actions-run.png)
 
@@ -641,6 +641,12 @@ Until now the namespace had been deployed by hand with Helm. For GitOps I handed
 
 ![Argo CD switched to the new repository](screenshots/26-argocd-new-repo.png)
 
+**The move to this repository** ([evidence/16-argocd-capstone-repo.txt](evidence/16-argocd-capstone-repo.txt)). The first pipeline run here pushed `ghcr.io/abhinavsuri90/devops-capstone/spendwise-*:28ab4ffa0951` and committed the tags. After `kubectl apply -f gitops/argocd-application.yaml`, Argo CD followed `DevOps-Capstone` at `helm/spendwise`, rolled out the new images (2/2 Pods each) and reported **Synced + Healthy** on the bot's commit `72a2d87`. The five expenses in the PVC were still there. For about a minute Argo CD showed the HPA as *Degraded*: its CPU metric read `<unknown>` until metrics-server had scraped the new Pods, and then it showed `35%/70%`.
+
+![Argo CD moves to the DevOps-Capstone repository](screenshots/35-argocd-capstone-repo.png)
+
+![Argo CD: spendwise Healthy and Synced to main (72a2d87) of DevOps-Capstone](screenshots/browser-16-argocd-capstone.png)
+
 ### Live demo (M10): commit → pipeline → deployment update (recorded)
 
 One commit, and everything after it is automatic. This was recorded in the coursework repository, before the move to this one, so the links go there ([evidence/11-m10-commit-to-deploy.txt](evidence/11-m10-commit-to-deploy.txt)):
@@ -755,6 +761,7 @@ These were not planted. They came up while building and running the project, and
 | 26 | [browser-15-github-trivy-annotations.png](screenshots/browser-15-github-trivy-annotations.png) | Trivy results of both images, published by the pipeline (M6) |
 | 27 | [browser-13-github-commits.png](screenshots/browser-13-github-commits.png) | Commit history (M3) |
 | 28 | [21](screenshots/21-gitops-handover.png) · [22](screenshots/22-argocd-deploys-spendwise.png) · [browser-10](screenshots/browser-10-argocd-spendwise.png) | GitOps handover to Argo CD, and the Argo CD application tree |
+| 28b | [35](screenshots/35-argocd-capstone-repo.png) · [browser-16](screenshots/browser-16-argocd-capstone.png) | Argo CD follows this repository: Synced + Healthy with the `devops-capstone` images |
 | 29 | [browser-09](screenshots/browser-09-gitops-before.png) · [browser-14](screenshots/browser-14-gitops-after.png) · [23](screenshots/23-m10-commit-to-deploy.png) | M10 live demo: before, after, and the whole chain in the terminal |
 | 30 | [24](screenshots/24-iac-scan-before.png) · [25](screenshots/25-iac-scan-after.png) | IaC scan of Terraform and the Helm chart, before and after the fixes |
 
