@@ -1,6 +1,6 @@
 # SpendWise: 5-minute live demo script
 
-**Author:** Abhinav (24BCS10282) · used for the final presentation (rubric M10). Every step was rehearsed and recorded; see the [README](README.md#live-demo-m10-commit--pipeline--deployment-update-recorded).
+**Author:** Abhinav (24BCS10282) · used for the final presentation (rubric M10). Every step was rehearsed and recorded; see the [README](README.md#live-demo-m10-commit--pipeline--deployment-update-recorded). Slides: [SpendWise DevOps Capstone (PDF)](https://drive.google.com/file/d/1MOUyH8X_VMM7THeL8x-YOiapEYEuX67m/view?usp=sharing).
 
 ## Before the session (5 minutes, laptop plugged in, lid open)
 

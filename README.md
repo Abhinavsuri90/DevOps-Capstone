@@ -4,6 +4,8 @@
 
 [![SpendWise CI/CD](https://github.com/Abhinavsuri90/DevOps-Capstone/actions/workflows/ci-cd.yml/badge.svg)](https://github.com/Abhinavsuri90/DevOps-Capstone/actions/workflows/ci-cd.yml)
 
+**Presentation:** [slides (PDF, 18 pages)](demo/SpendWise-DevOps-Capstone.pdf), also on [Google Drive](https://drive.google.com/file/d/1MOUyH8X_VMM7THeL8x-YOiapEYEuX67m/view?usp=sharing) · **Demo folder:** [demo/](demo/) · **Live demo script:** [DEMO.md](DEMO.md)
+
 SpendWise is a small expense tracker for students. You add what you spend (mess fees, books, travel…) and see totals by category. It is my own application, written for this project:
 
 - a FastAPI backend with PostgreSQL and Alembic migrations
@@ -66,7 +68,7 @@ The [Makefile](Makefile) wraps every command used below. [DEMO.md](DEMO.md) is t
 | M7 Terraform | VPC with 2 public subnets, EKS with a node group, plan/apply/destroy, `tfvars.example` | [terraform/](terraform/), [terraform.tfvars.example](terraform/terraform.tfvars.example) · [Terraform infrastructure](#terraform-infrastructure) · applied, verified with `kubectl` and destroyed on AWS: [recorded run](#recorded-run-on-aws), [evidence](evidence/14-terraform-aws-eks.txt) · [plan + apply](screenshots/27-eks-plan-apply.png) · Console: [EKS cluster](screenshots/31-aws-console-eks-cluster.png), [node group](screenshots/32-aws-console-eks-node-group.png), [VPC](screenshots/33-aws-console-vpc.png) · [destroy](screenshots/30-eks-destroy.png) |
 | M8 Kubernetes + Helm | Namespace, chart, 2+ replicas each, ClusterIP Services, Ingress `/` → frontend and `/api` → backend | [k8s/namespace.yaml](k8s/namespace.yaml), [helm/spendwise/](helm/spendwise/) · [screenshots](#kubernetes-deployment) |
 | M9 Observability | `/metrics`, Prometheus scraping, Grafana panels with live data | [monitoring/](monitoring/), ServiceMonitor/rules/dashboard in the chart · [Monitoring](#monitoring) |
-| M10 Docs + demo | This README; commit → pipeline → deployment update | this file · [recorded live demo](#live-demo-m10-commit--pipeline--deployment-update-recorded) |
+| M10 Docs + demo | This README; commit → pipeline → deployment update | this file · [demo/](demo/): [slides (PDF)](demo/SpendWise-DevOps-Capstone.pdf), also on [Google Drive](https://drive.google.com/file/d/1MOUyH8X_VMM7THeL8x-YOiapEYEuX67m/view?usp=sharing) · [demo script](DEMO.md) · [recorded live demo](#live-demo-m10-commit--pipeline--deployment-update-recorded) |
 
 ## Project overview
 
@@ -172,6 +174,7 @@ DevOps-Capstone/
 ├── gitops/                 # Argo CD Application + Argo CD install values
 ├── troubleshooting/        # Helm values overlays that inject the five challenge faults
 ├── scripts/                # evidence.sh (transcript recorder), render-evidence-png.py (transcript → PNG)
+├── demo/                   # presentation slides (PDF) and demo notes, see demo/README.md
 ├── evidence/               # recorded command transcripts
 └── screenshots/            # rendered transcripts + browser captures
 ```
