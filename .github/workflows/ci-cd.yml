@@ -6,11 +6,12 @@ name: "SpendWise CI/CD"
 on:
   push:
     branches: [main]
-    # The GitOps commit, recorded evidence, screenshots and docs do not start a new run.
+    # The GitOps commit, recorded evidence, screenshots, the demo/ folder and docs do not start a new run.
     paths-ignore:
       - "helm/spendwise/values-gitops.yaml"
       - "evidence/**"
       - "screenshots/**"
+      - "demo/**"
       - "**/*.md"
   pull_request:
   workflow_dispatch:
