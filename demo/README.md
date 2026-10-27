@@ -7,7 +7,7 @@ This folder holds the presentation material that the capstone brief asks for in 
 | File | What it is |
 | --- | --- |
 | [SpendWise-DevOps-Capstone.pdf](SpendWise-DevOps-Capstone.pdf) | The presentation: 18 slides, 16:9, PDF. Also on [Google Drive](https://drive.google.com/file/d/1MOUyH8X_VMM7THeL8x-YOiapEYEuX67m/view?usp=sharing) |
-| [../DEMO.md](../DEMO.md) | The 5-minute live demo script: what to show and what to say at each step |
+| [Presentation video](https://drive.google.com/file/d/1M-TLJpH_iL0mrWlVscXNAT0SQ9CEVnz5/view?usp=sharing) | The recorded presentation, about 5 minutes, on Google Drive |
 
 ## What the slides cover
 
