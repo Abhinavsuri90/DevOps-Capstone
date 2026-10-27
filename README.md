@@ -64,7 +64,7 @@ The [Makefile](Makefile) wraps every command used below. [DEMO.md](DEMO.md) is t
 | M3 Git & GitHub | Public repo, meaningful commits, `.gitignore` | [github.com/Abhinavsuri90/DevOps-Capstone](https://github.com/Abhinavsuri90/DevOps-Capstone), [.gitignore](.gitignore) (`.env`, `__pycache__/`, `node_modules/`, `.venv/`, state files) · [commit history](screenshots/browser-13-github-commits.png) |
 | M4 Docker | Backend Dockerfile, multi-stage frontend Dockerfile, non-root, `docker compose up --build` | [backend/Dockerfile](backend/Dockerfile), [frontend/Dockerfile](frontend/Dockerfile) (multi-stage), [docker-compose.yml](docker-compose.yml) · [screenshot](screenshots/01-docker-compose.png) |
 | M5 CI/CD | Workflow on push to `main`, pytest gate, frontend build, both images built, pushed to GHCR with SHA tags | [.github/workflows/ci-cd.yml](.github/workflows/ci-cd.yml) · [green run](screenshots/browser-11-github-actions-run.png) · [GHCR SHA tags](screenshots/browser-12-ghcr-tags.png) |
-| M6 DevSecOps | Trivy on both images, fails on HIGH/CRITICAL, explanation | `build-images` job + [security/trivy.yaml](security/trivy.yaml) · [Trivy results from CI](screenshots/browser-15-github-trivy-annotations.png) · [explanation](#devsecops-implementation) |
+| M6 DevSecOps | Trivy on both images, fails on HIGH/CRITICAL, explanation | `build-images` job + [security/trivy.yaml](security/trivy.yaml) · [Trivy results from CI](screenshots/browser-15-github-trivy-annotations.png) · [explanation](#devsecops-implementation) · [a real CVE block and its fix](#a-real-block-in-this-repository) |
 | M7 Terraform | VPC with 2 public subnets, EKS with a node group, plan/apply/destroy, `tfvars.example` | [terraform/](terraform/), [terraform.tfvars.example](terraform/terraform.tfvars.example) · [Terraform infrastructure](#terraform-infrastructure) · applied, verified with `kubectl` and destroyed on AWS: [recorded run](#recorded-run-on-aws), [evidence](evidence/14-terraform-aws-eks.txt) · [plan + apply](screenshots/27-eks-plan-apply.png) · Console: [EKS cluster](screenshots/31-aws-console-eks-cluster.png), [node group](screenshots/32-aws-console-eks-node-group.png), [VPC](screenshots/33-aws-console-vpc.png) · [destroy](screenshots/30-eks-destroy.png) |
 | M8 Kubernetes + Helm | Namespace, chart, 2+ replicas each, ClusterIP Services, Ingress `/` → frontend and `/api` → backend | [k8s/namespace.yaml](k8s/namespace.yaml), [helm/spendwise/](helm/spendwise/) · [screenshots](#kubernetes-deployment) |
 | M9 Observability | `/metrics`, Prometheus scraping, Grafana panels with live data | [monitoring/](monitoring/), ServiceMonitor/rules/dashboard in the chart · [Monitoring](#monitoring) |
@@ -145,7 +145,7 @@ flowchart LR
 | Area | Technology (version) |
 | --- | --- |
 | Backend | Python 3.13, FastAPI 0.143, Uvicorn 0.54, SQLAlchemy 2.1, Alembic 1.20, psycopg 3.3, prometheus-client 0.26 |
-| Frontend | React 19.3, Vite 8.3, served by `nginxinc/nginx-unprivileged:1.30-alpine` |
+| Frontend | React 19.3, Vite 8.3, served by `nginxinc/nginx-unprivileged:1.30.6-alpine` |
 | Database | PostgreSQL 17 (`postgres:17-alpine`) |
 | Tests & quality | pytest 9.1, pytest-cov 7.1, ruff 0.17 |
 | Containers | Docker 29.5, Docker Compose, multi-stage builds |
@@ -222,7 +222,7 @@ The 9 tests cover:
 | File | What it does |
 | --- | --- |
 | [backend/Dockerfile](backend/Dockerfile) | `python:3.13-alpine`. Installs the pinned requirements, then **removes pip** (it bundles libraries that image scanners flag), creates user `spendwise` (uid 10001) and runs as it. The entrypoint [entrypoint.sh](backend/entrypoint.sh) runs `alembic upgrade head`, then Uvicorn. Has a `HEALTHCHECK` on `/health` |
-| [frontend/Dockerfile](frontend/Dockerfile) | **Multi-stage.** Stage 1 `node:24-alpine` runs `npm ci && npm run build`. Stage 2 `nginx-unprivileged:1.30-alpine` (uid 101, port 8080) serves `dist/`. The [nginx template](frontend/nginx.conf.template) proxies `/api/` to `${BACKEND_HOST}:${BACKEND_PORT}`, adds `/healthz`, and falls back to `index.html` for the SPA |
+| [frontend/Dockerfile](frontend/Dockerfile) | **Multi-stage.** Stage 1 `node:24-alpine` runs `npm ci && npm run build`. Stage 2 `nginx-unprivileged:1.30.6-alpine` (uid 101, port 8080) serves `dist/`; curl is removed and Alpine's security fixes are installed at build time. The [nginx template](frontend/nginx.conf.template) proxies `/api/` to `${BACKEND_HOST}:${BACKEND_PORT}`, adds `/healthz`, and falls back to `index.html` for the SPA |
 | [docker-compose.yml](docker-compose.yml) | `postgres` (healthcheck with `pg_isready`, named volume), `backend` (waits for a healthy database), `frontend` on `localhost:3000`. The DB password comes from `.env` (git-ignored, see [.env.example](.env.example)). Compose stops with an error if it is missing |
 
 Each image uses its own folder as build context (`backend/`, `frontend/`). The [backend](backend/.dockerignore) and [frontend](frontend/.dockerignore) `.dockerignore` files keep tests, caches, `node_modules/` and `dist/` out of it.
@@ -452,6 +452,8 @@ Every run is listed under [Actions → "SpendWise CI/CD"](https://github.com/Abh
 
 ![Green pipeline run on GitHub Actions](screenshots/browser-11-github-actions-run.png)
 
+**The latest run.** [Run 40345710014](https://github.com/Abhinavsuri90/DevOps-Capstone/actions/runs/40345710014) on commit `6cd0f16` released the fix for new CVEs that had blocked the previous run ([a real block in this repository](#a-real-block-in-this-repository)).
+
 **Images in GHCR.** They are tagged with the 12-character commit SHA, never `latest` (`ghcr.io/abhinavsuri90/devops-capstone/spendwise-backend` and `-frontend`):
 
 ![GHCR spendwise-backend versions tagged with commit SHAs](screenshots/browser-12-ghcr-tags.png)
@@ -528,6 +530,18 @@ Gitleaks found one real secret on disk: the Compose `.env` file (the random DB p
 - **What it scanned:** Trivy unpacked each built image and checked two things against its vulnerability database: the operating-system packages (Alpine 3.24: 29 packages in the backend image, 70 in the frontend), and every language package it found (the Python `site-packages` of the backend, with each package's `METADATA`).
 - **Result:** 0 HIGH or CRITICAL vulnerabilities with an available fix in both images, so the gate passes. This does not mean "no vulnerabilities exist": it means nothing at the severity we block on has a released fix we could upgrade to.
 - **What failing looks like:** Session 17's first image scan failed on CVEs in libraries vendored inside `pip` (e.g. CVE-2025-47273 in setuptools, a path traversal). Removing pip from the runtime image is why both images here scan clean. See [Session 17](https://github.com/Abhinavsuri90/DevOps-Coursework-final/blob/main/session-17-devsecops/README.md#the-image-scan-caught-a-real-problem-and-the-gate-failed).
+
+#### A real block in this repository
+
+On 26 October, ten days after the last release, [run 40342989187](https://github.com/Abhinavsuri90/DevOps-Capstone/actions/runs/40342989187) stopped at *Trivy image scan - frontend* with **3 HIGH** findings. The security gate failed, so nothing was pushed or deployed. The CVEs had been published after the last green run, in packages of the nginx base image ([evidence/17-cve-fix-frontend.txt](evidence/17-cve-fix-frontend.txt)):
+
+- **curl and libcurl** CVE-2026-92392 (HTTP/2 upload use-after-free) and **brotli-libs** CVE-2026-111497 (out-of-bounds write). nginx does not use curl at runtime, so it is removed, and `apk upgrade` installs Alpine's fixed packages at build time.
+- That rescan then showed **nginx 1.30.5** itself: CVE-2026-15176, CVE-2026-93479 and CVE-2026-97205, all fixed in 1.30.6. The base image is now pinned to `nginx-unprivileged:1.30.6-alpine`.
+- Rescan: **0** vulnerabilities, Trivy exit code 0. [Run 40345710014](https://github.com/Abhinavsuri90/DevOps-Capstone/actions/runs/40345710014) passed all 12 jobs and released the patched image.
+
+![Release blocked: Trivy finds 3 HIGH in the frontend image](screenshots/36-cve-blocked.png)
+
+![The fix: curl removed, Alpine fixes, nginx 1.30.6, then 0 vulnerabilities](screenshots/37-cve-fixed.png)
 
 ## Monitoring
 
@@ -668,6 +682,16 @@ One commit, and everything after it is automatic. This was recorded in the cours
 
 ![The whole chain in the terminal](screenshots/23-m10-commit-to-deploy.png)
 
+**Recorded again on this repository (26 October).** The commit was the CVE fix above; everything after it was automatic ([evidence/18-live-demo-cve-fix.txt](evidence/18-live-demo-cve-fix.txt)):
+
+| Step | What happened | When (UTC) |
+| --- | --- | --- |
+| 1. Developer | Commit `6cd0f16` *"Frontend image: nginx 1.30.6, curl removed, Alpine security fixes"*, then `git push` | 15:04:26 |
+| 2. CI | [Run 40345710014](https://github.com/Abhinavsuri90/DevOps-Capstone/actions/runs/40345710014): all 12 jobs green, patched images pushed as `…/spendwise-*:6cd0f16e69b3` | finished 15:11:34 |
+| 3. GitOps commit | `github-actions[bot]` committed `4ce445d` *"gitops: deploy spendwise 6cd0f16e69b3"* | |
+| 4. Argo CD | Rolled out the new Pods one by one: **Synced + Healthy** on `4ce445d` | 15:13:09 |
+| 5. Result | `GET /api/version` → `{"version":"6cd0f16e69b3"}`; the frontend Pods run `nginx/1.30.6` | |
+
 **To repeat it live during the presentation:**
 
 1. Change something visible, for example the subtitle in [App.jsx](frontend/src/App.jsx), then commit and push.
@@ -727,6 +751,7 @@ These were not planted. They came up while building and running the project, and
 | Stuck StatefulSet rollout | A correct `helm upgrade` still timed out | `OrderedReady` never replaces a Pod that cannot become Ready | Delete the stuck Pod (forced rollback) | Fault 3 above |
 | Unbounded list endpoint | HPA pinned at `maxReplicas` (5) under synthetic traffic | `GET /api/expenses` returned **every** row, so each call grew with the table (368 rows, 38 KB) | `limit` parameter (default 100, max 500) + a test. Handling time 0.082 → 0.037 s/s, CPU about 167m → 74m | [08-real-issue-unbounded-list.txt](evidence/08-real-issue-unbounded-list.txt), [before](screenshots/18-real-issue-unbounded-list.png), [after](screenshots/19-real-issue-fix-verified.png) |
 | A masked fault | An injected Ingress *path* fault (`/apis`) did **not** break the app | The frontend's nginx also proxies `/api/` to the backend, so misrouted calls still worked through one extra hop | Kept as a finding and replaced by the host-typo fault (#2) | [07-troubleshooting-extra-masked-path.txt](evidence/07-troubleshooting-extra-masked-path.txt), [screenshot](screenshots/17-extra-masked-ingress-path.png) |
+| New CVEs blocked a release (26 Oct) | Run 40342989187 failed at *Trivy image scan - frontend* with 3 HIGH; the security gate stopped the push | CVEs published after the last green run, in curl, brotli and nginx 1.30.5 of the base image | curl removed, Alpine fixes installed, base pinned to nginx 1.30.6; rescan 0, run 40345710014 green | [17-cve-fix-frontend.txt](evidence/17-cve-fix-frontend.txt) |
 | Grafana "No data" | The 5xx error-rate stat was empty while there were no errors | `rate(…{status=~"5.."})` returns *no series*, not 0, when nothing has failed | `… or vector(0)` in the panel query | [files/grafana-dashboard.json](helm/spendwise/files/grafana-dashboard.json) |
 | Gitleaks finding on disk | The local secret scan found 1 leak | The Compose `.env` file (the random DB password, then at `docker/.env`) is a real secret, but it is git-ignored | Scan exactly what Git publishes: clean. CI scans a fresh checkout | [06-devsecops-local.txt](evidence/06-devsecops-local.txt) |
 | CI deploy failed only on GitHub | `helm test` failed in the kind job, but not on my laptop | `hook-delete-policy: hook-succeeded` deleted the test Pod before the runner's Helm read its logs (`--logs`) | Keep the test Pod (`before-hook-creation`) and publish Pod states and events as a public annotation when the deploy fails | [Pipeline runs on GitHub](#pipeline-runs-on-github) |
@@ -751,6 +776,7 @@ These were not planted. They came up while building and running the project, and
 | 12 | [07-monitoring.png](screenshots/07-monitoring.png) | ServiceMonitor, targets, rules, PromQL in the terminal (M9) |
 | 13 | [08-devsecops-scans.png](screenshots/08-devsecops-scans.png) | Bandit, pip-audit, npm audit, Trivy fs, Gitleaks (M6) |
 | 14 | [09-trivy-image-scan.png](screenshots/09-trivy-image-scan.png) | Trivy image scans of both images (M6) |
+| 14b | [36](screenshots/36-cve-blocked.png) · [37](screenshots/37-cve-fixed.png) | A real Trivy block (3 HIGH) and the fix down to 0 (M6) |
 | 15–19 | [10](screenshots/10-fault1-image-tag.png) · [11](screenshots/11-fault2-ingress-host.png) · [12](screenshots/12-fault3-db-secret.png) · [13](screenshots/13-fault3-recovery.png) · [14](screenshots/14-fault4-metrics-path.png) · [15](screenshots/15-fault4-fix.png) · [16](screenshots/16-fault5-hpa-requests.png) · [16b](screenshots/16b-fault5-verify.png) | Troubleshooting challenge, faults 1–5 |
 | 20 | [browser-05](screenshots/browser-05-troubleshoot-ingress-404.png) · [browser-06](screenshots/browser-06-troubleshoot-targets-down.png) · [browser-07](screenshots/browser-07-troubleshoot-alert-firing.png) | Faults 2 and 4 in the browser (404, targets down, alert firing) |
 | 21 | [17-extra-masked-ingress-path.png](screenshots/17-extra-masked-ingress-path.png) | The masked fault |
